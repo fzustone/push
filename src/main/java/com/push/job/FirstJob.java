@@ -21,24 +21,36 @@ import com.dangdang.ddframe.job.api.ShardingContext;
 import com.dangdang.ddframe.job.api.simple.SimpleJob;
 import com.push.fixture.entity.Foo;
 import com.push.fixture.repository.FooRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
-public class SpringSimpleJob implements SimpleJob {
+@Component
+@Slf4j
+public class FirstJob implements SimpleJob {
 
-    @Autowired
-    private FooRepository fooRepository;
+	@Autowired
+	private FooRepository fooRepository;
 
-    @Override
-    public void execute(final ShardingContext shardingContext) {
-        System.out.println(String.format("Item: %s | Time: %s | Thread: %s | %s",
-                shardingContext.getShardingItem(), new SimpleDateFormat("HH:mm:ss").format(new Date()), Thread.currentThread().getId(), "SIMPLE"));
-        List<Foo> data = fooRepository.findTodoData(shardingContext.getShardingParameter(), 10);
-        for (Foo each : data) {
-            fooRepository.setCompleted(each.getId());
-        }
-    }
+	@Override
+	public void execute(final ShardingContext shardingContext) {
+		MDC.put("jobName","firstJob");
+		log.info("====First Job Begin====");
+		log.info(String.format("Item: %s | Time: %s | Thread: %s | %s", shardingContext.getShardingItem(), LocalDateTime.now(), Thread.currentThread().getId(), "FIRST JOB"));
+		List<Foo> data = fooRepository.findTodoData(shardingContext.getShardingParameter(), 10);
+		for (Foo each : data) {
+			fooRepository.setCompleted(each.getId());
+		}
+
+		log.debug("test debug");
+
+		log.error("test error");
+
+		log.info("====First Job End====");
+		MDC.remove("jobName");
+	}
 }
